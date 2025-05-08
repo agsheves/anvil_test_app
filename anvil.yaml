@@ -24,8 +24,9 @@ db_schema:
     server: full
     title: Users
 dependencies: []
-name: M3 App 2
-package_name: M3_App_2
+metadata: {description: A Demo App for Tests and Explainers, title: My Demo App}
+name: My Demo App
+package_name: My_Demo_App
 renamed: true
 runtime_options:
   client_version: '3'
