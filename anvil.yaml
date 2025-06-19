@@ -36,7 +36,7 @@ runtime_options:
 secrets:
   HEYGEN_API_KEY:
     type: secret
-    value: {IWD6RP5QFCPRKWFU: 5V2Vu7JnyovkrTqwFIouwEXHkdMpvSRmDxT2IQnTzHugREp0SgGTelFkkVYHqmExMQyaJvz7HGO0vSzvEwKaeRIeu2cWqeVklgZUnuqqd75/0HIpa/TI0JIALIGLtb/4LZPvzNmXMLHNuySgleFj6mle+WvuBakeavL2Jc/WrSCP6NrKayiHMzKzlvCoy2vkzNRRJzup1/VG/DQ=}
+    value: {IWD6RP5QFCPRKWFU: VTAz2FAB3n/DNyNBNcAWYzFJXYJOp198Mjng2aTClFfQxQhB2DpePB3Su5/1E48Yt0sLFeSPt3AdBFj4EsvWXO+n0PE28J+RYanR2gnLIii6wAr1lCVHxxLjwBZXIfWDuTi6+bPsKMaX15+3WYjcrMUwcNtGDTA7gj4lIodBV6DWVx/ZJEgyjFyBZCmBT8W5G+GDAVeNi7+scJA=}
 services:
 - client_config: {}
   server_config: {}
