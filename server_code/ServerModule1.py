@@ -19,16 +19,7 @@ def create_heygen_session(avatar_id, voice_id):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {api_key}",
             },
-            json={
-                "version": "v2",
-                "avatar_id": avatar_id,
-                "voice": {
-                    "voice_id": voice_id,
-                    "rate": 1.0,
-                },
-                "quality": "high",
-                "video_encoding": "H264",
-            },
+            json={"version": "v2", "avatar_id": avatar_id},
         )
 
         session_data = json.loads(session_response.get_bytes())
@@ -39,59 +30,9 @@ def create_heygen_session(avatar_id, voice_id):
             "sessionToken": api_key,  # Use API key for subsequent HeyGen API calls
         }
 
-    except anvil.http.HttpError as e:
-        print(f"HTTP Error creating session: {e}")
-        print(f"Status code: {e.status}")
-
-        # Try to get the response body using the correct Anvil method
-        try:
-            # In Anvil, we need to access the response differently
-            error_response = e.response
-            if error_response:
-                error_body = error_response.get_bytes()
-                print(f"Error response body (raw): {error_body}")
-
-                if error_body:
-                    try:
-                        error_json = json.loads(error_body)
-                        print(f"Parsed error response: {error_json}")
-
-                        # Extract HeyGen specific error details
-                        error_details = ""
-                        if "code" in error_json:
-                            error_details += f"Code: {error_json['code']}"
-                        if "message" in error_json:
-                            if error_details:
-                                error_details += ", "
-                            error_details += f"Message: {error_json['message']}"
-                        if "details" in error_json:
-                            if error_details:
-                                error_details += ", "
-                            error_details += f"Details: {error_json['details']}"
-
-                        if error_details:
-                            print(f"HeyGen error details: {error_details}")
-                            return {"error": error_details}
-                        else:
-                            return {
-                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                            }
-                    except json.JSONDecodeError:
-                        return {
-                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                        }
-                else:
-                    return {"error": f"HTTP {e.status}: No response body"}
-            else:
-                return {"error": f"HTTP {e.status}: No response object"}
-
-        except Exception as parse_error:
-            print(f"Could not parse error response: {parse_error}")
-            return {"error": f"HTTP {e.status}: Could not parse error response"}
-
     except Exception as e:
-        print(f"Unexpected error creating session: {e}")
-        return {"error": f"Unexpected error: {str(e)}"}
+        print(f"Error creating session: {e}")
+        return {"error": f"Session creation failed: {str(e)}"}
 
 
 @anvil.server.callable
@@ -109,47 +50,9 @@ def start_heygen_session(session_id, session_token):
             json={"session_id": session_id},
         )
         return json.loads(response.get_bytes())
-    except anvil.http.HttpError as e:
-        print(f"HTTP Error starting session: {e}")
-        print(f"Status code: {e.status}")
-
-        try:
-            error_response = e.response
-            if error_response:
-                error_body = error_response.get_bytes()
-                if error_body:
-                    try:
-                        error_json = json.loads(error_body)
-                        error_details = ""
-                        if "code" in error_json:
-                            error_details += f"Code: {error_json['code']}"
-                        if "message" in error_json:
-                            if error_details:
-                                error_details += ", "
-                            error_details += f"Message: {error_json['message']}"
-
-                        if error_details:
-                            return {"error": error_details}
-                        else:
-                            return {
-                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                            }
-                    except json.JSONDecodeError:
-                        return {
-                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                        }
-                else:
-                    return {"error": f"HTTP {e.status}: No response body"}
-            else:
-                return {"error": f"HTTP {e.status}: No response object"}
-
-        except Exception as parse_error:
-            print(f"Could not parse start error response: {parse_error}")
-            return {"error": f"HTTP {e.status}: Could not parse error response"}
-
     except Exception as e:
-        print(f"Unexpected error starting session: {e}")
-        return {"error": f"Unexpected error: {str(e)}"}
+        print(f"Error starting session: {e}")
+        return {"error": f"Session start failed: {str(e)}"}
 
 
 @anvil.server.callable
@@ -167,46 +70,9 @@ def send_text_to_avatar(session_id, text, session_token, task_type="talk"):
             json={"session_id": session_id, "text": text, "task_type": task_type},
         )
         return json.loads(response.get_bytes())
-    except anvil.http.HttpError as e:
-        print(f"HTTP Error sending text: {e}")
-
-        try:
-            error_response = e.response
-            if error_response:
-                error_body = error_response.get_bytes()
-                if error_body:
-                    try:
-                        error_json = json.loads(error_body)
-                        error_details = ""
-                        if "code" in error_json:
-                            error_details += f"Code: {error_json['code']}"
-                        if "message" in error_json:
-                            if error_details:
-                                error_details += ", "
-                            error_details += f"Message: {error_json['message']}"
-
-                        if error_details:
-                            return {"error": error_details}
-                        else:
-                            return {
-                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                            }
-                    except json.JSONDecodeError:
-                        return {
-                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                        }
-                else:
-                    return {"error": f"HTTP {e.status}: No response body"}
-            else:
-                return {"error": f"HTTP {e.status}: No response object"}
-
-        except Exception as parse_error:
-            print(f"Could not parse send text error response: {parse_error}")
-            return {"error": f"HTTP {e.status}: Could not parse error response"}
-
     except Exception as e:
-        print(f"Unexpected error sending text: {e}")
-        return {"error": f"Unexpected error: {str(e)}"}
+        print(f"Error sending text: {e}")
+        return {"error": f"Send text failed: {str(e)}"}
 
 
 @anvil.server.callable
@@ -224,46 +90,9 @@ def close_heygen_session(session_id, session_token):
             json={"session_id": session_id},
         )
         return json.loads(response.get_bytes())
-    except anvil.http.HttpError as e:
-        print(f"HTTP Error closing session: {e}")
-
-        try:
-            error_response = e.response
-            if error_response:
-                error_body = error_response.get_bytes()
-                if error_body:
-                    try:
-                        error_json = json.loads(error_body)
-                        error_details = ""
-                        if "code" in error_json:
-                            error_details += f"Code: {error_json['code']}"
-                        if "message" in error_response:
-                            if error_details:
-                                error_details += ", "
-                            error_details += f"Message: {error_json['message']}"
-
-                        if error_details:
-                            return {"error": error_details}
-                        else:
-                            return {
-                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                            }
-                    except json.JSONDecodeError:
-                        return {
-                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                        }
-                else:
-                    return {"error": f"HTTP {e.status}: No response body"}
-            else:
-                return {"error": f"HTTP {e.status}: No response object"}
-
-        except Exception as parse_error:
-            print(f"Could not parse close error response: {parse_error}")
-            return {"error": f"HTTP {e.status}: Could not parse error response"}
-
     except Exception as e:
-        print(f"Unexpected error closing session: {e}")
-        return {"error": f"Unexpected error: {str(e)}"}
+        print(f"Error closing session: {e}")
+        return {"error": f"Close session failed: {str(e)}"}
 
 
 @anvil.server.callable
