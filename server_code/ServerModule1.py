@@ -29,16 +29,7 @@ def create_heygen_session(avatar_id, voice_id):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {session_token}",
         },
-        json={
-            "version": "v2",
-            "avatar_id": avatar_id,
-            "voice": {
-                "voice_id": voice_id,
-                "rate": 1.0,
-            },
-            "quality": "high",
-            "video_encoding": "H264",
-        },
+        json={"version": "v2", "avatar_id": avatar_id},
     )
 
     session_data = json.loads(session_response.get_bytes())
