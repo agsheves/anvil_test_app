@@ -25,6 +25,15 @@ class avatar_window(avatar_windowTemplate):
         # Call server function
         session_data = anvil.server.call("create_heygen_session", avatar_id, voice_id)
 
+        # Check if session creation was successful
+        if session_data is None:
+            # Show error in status
+            self.call_js(
+                "window.avatarFunctions.showError",
+                "Failed to create session. Please check your avatar ID and voice ID.",
+            )
+            return
+
         # Pass data to JavaScript
         self.call_js(
             "window.avatarFunctions.setupLiveKitRoom",
@@ -33,11 +42,17 @@ class avatar_window(avatar_windowTemplate):
         )
 
         # Start the session with session token
-        anvil.server.call(
+        start_result = anvil.server.call(
             "start_heygen_session",
             session_data["sessionInfo"]["session_id"],
             session_data["sessionToken"],
         )
+
+        if start_result is None:
+            # Show error in status
+            self.call_js("window.avatarFunctions.showError", "Failed to start session.")
+            return
+
         self.call_js("window.avatarFunctions.connectToRoom")
 
     def _handle_close_click(self, event):
