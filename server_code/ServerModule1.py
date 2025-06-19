@@ -6,7 +6,7 @@ import json
 
 @anvil.server.callable
 def create_heygen_session(avatar_id, voice_id):
-    print("Starting session")
+    print("Creating session")
     api_key = anvil.secrets.get_secret("HEYGEN_API_KEY")
     server_url = "https://api.heygen.com"
 
@@ -49,6 +49,7 @@ def create_heygen_session(avatar_id, voice_id):
 
 @anvil.server.callable
 def start_heygen_session(session_id, session_token):
+    print("Starting session")
     server_url = "https://api.heygen.com"
 
     try:
