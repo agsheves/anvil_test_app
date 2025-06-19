@@ -7,10 +7,13 @@ import anvil.secrets
 import anvil.secrets
 import anvil.http
 import anvil.server
+import json
 
 @anvil.server.callable
 def create_heygen_session(avatar_id, voice_id):
   """Create a new HeyGen session and return session info"""
+  print(f"Server: Creating session for avatar={avatar_id}, voice={voice_id}")
+
   api_key = anvil.secrets.get_secret("HEYGEN_API_KEY")
   server_url = "https://api.heygen.com"
 
@@ -44,7 +47,7 @@ def create_heygen_session(avatar_id, voice_id):
       "video_encoding": "H264",
     }
   )
-
+  print(session_response)
   return {
     "sessionInfo": session_response.json()["data"],
     "sessionToken": session_token
