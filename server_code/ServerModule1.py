@@ -3,6 +3,7 @@ import anvil.http
 import anvil.server
 import json
 
+# Rolled back to earlier version
 @anvil.server.callable
 def create_heygen_session(avatar_id, voice_id):
   api_key = anvil.secrets.get_secret("HEYGEN_API_KEY")
