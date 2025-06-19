@@ -26,11 +26,19 @@ class avatar_window(avatar_windowTemplate):
         session_data = anvil.server.call("create_heygen_session", avatar_id, voice_id)
 
         # Check if session creation was successful
-        if session_data is None:
+        if session_data is None or "error" in session_data:
             # Show error in status
+            error_message = (
+                session_data.get(
+                    "error",
+                    "Failed to create session. Please check your avatar ID and voice ID.",
+                )
+                if session_data
+                else "Failed to create session. Please check your avatar ID and voice ID."
+            )
             self.call_js(
                 "window.avatarFunctions.showError",
-                "Failed to create session. Please check your avatar ID and voice ID.",
+                error_message,
             )
             return
 
@@ -48,9 +56,14 @@ class avatar_window(avatar_windowTemplate):
             session_data["sessionToken"],
         )
 
-        if start_result is None:
+        if start_result is None or "error" in start_result:
             # Show error in status
-            self.call_js("window.avatarFunctions.showError", "Failed to start session.")
+            error_message = (
+                start_result.get("error", "Failed to start session.")
+                if start_result
+                else "Failed to start session."
+            )
+            self.call_js("window.avatarFunctions.showError", error_message)
             return
 
         self.call_js("window.avatarFunctions.connectToRoom")
