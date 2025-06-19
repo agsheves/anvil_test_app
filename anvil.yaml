@@ -33,6 +33,10 @@ runtime_options:
   server_spec: {base: python310-minimal}
   server_version: python3-sandbox
   version: 2
+secrets:
+  HEYGEN_API_KEY:
+    type: secret
+    value: {IWD6RP5QFCPRKWFU: 5V2Vu7JnyovkrTqwFIouwEXHkdMpvSRmDxT2IQnTzHugREp0SgGTelFkkVYHqmExMQyaJvz7HGO0vSzvEwKaeRIeu2cWqeVklgZUnuqqd75/0HIpa/TI0JIALIGLtb/4LZPvzNmXMLHNuySgleFj6mle+WvuBakeavL2Jc/WrSCP6NrKayiHMzKzlvCoy2vkzNRRJzup1/VG/DQ=}
 services:
 - client_config: {}
   server_config: {}
@@ -40,4 +44,7 @@ services:
 - client_config: {allow_signup: false, confirm_email: true, enable_automatically: true, use_email: true}
   server_config: {user_table: users}
   source: /runtime/services/anvil/users.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup_form: Form1
