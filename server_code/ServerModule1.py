@@ -43,37 +43,47 @@ def create_heygen_session(avatar_id, voice_id):
         print(f"HTTP Error creating session: {e}")
         print(f"Status code: {e.status}")
 
-        # Try to get the response body
+        # Try to get the response body using the correct Anvil method
         try:
-            error_body = e.get_bytes()
-            print(f"Error response body (raw): {error_body}")
+            # In Anvil, we need to access the response differently
+            error_response = e.response
+            if error_response:
+                error_body = error_response.get_bytes()
+                print(f"Error response body (raw): {error_body}")
 
-            if error_body:
-                error_response = json.loads(error_body)
-                print(f"Parsed error response: {error_response}")
+                if error_body:
+                    try:
+                        error_json = json.loads(error_body)
+                        print(f"Parsed error response: {error_json}")
 
-                # Extract HeyGen specific error details
-                error_details = ""
-                if "code" in error_response:
-                    error_details += f"Code: {error_response['code']}"
-                if "message" in error_response:
-                    if error_details:
-                        error_details += ", "
-                    error_details += f"Message: {error_response['message']}"
-                if "details" in error_response:
-                    if error_details:
-                        error_details += ", "
-                    error_details += f"Details: {error_response['details']}"
+                        # Extract HeyGen specific error details
+                        error_details = ""
+                        if "code" in error_json:
+                            error_details += f"Code: {error_json['code']}"
+                        if "message" in error_json:
+                            if error_details:
+                                error_details += ", "
+                            error_details += f"Message: {error_json['message']}"
+                        if "details" in error_json:
+                            if error_details:
+                                error_details += ", "
+                            error_details += f"Details: {error_json['details']}"
 
-                if error_details:
-                    print(f"HeyGen error details: {error_details}")
-                    return {"error": error_details}
+                        if error_details:
+                            print(f"HeyGen error details: {error_details}")
+                            return {"error": error_details}
+                        else:
+                            return {
+                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                            }
+                    except json.JSONDecodeError:
+                        return {
+                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                        }
                 else:
-                    return {
-                        "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                    }
+                    return {"error": f"HTTP {e.status}: No response body"}
             else:
-                return {"error": f"HTTP {e.status}: No response body"}
+                return {"error": f"HTTP {e.status}: No response object"}
 
         except Exception as parse_error:
             print(f"Could not parse error response: {parse_error}")
@@ -104,25 +114,34 @@ def start_heygen_session(session_id, session_token):
         print(f"Status code: {e.status}")
 
         try:
-            error_body = e.get_bytes()
-            if error_body:
-                error_response = json.loads(error_body)
-                error_details = ""
-                if "code" in error_response:
-                    error_details += f"Code: {error_response['code']}"
-                if "message" in error_response:
-                    if error_details:
-                        error_details += ", "
-                    error_details += f"Message: {error_response['message']}"
+            error_response = e.response
+            if error_response:
+                error_body = error_response.get_bytes()
+                if error_body:
+                    try:
+                        error_json = json.loads(error_body)
+                        error_details = ""
+                        if "code" in error_json:
+                            error_details += f"Code: {error_json['code']}"
+                        if "message" in error_json:
+                            if error_details:
+                                error_details += ", "
+                            error_details += f"Message: {error_json['message']}"
 
-                if error_details:
-                    return {"error": error_details}
+                        if error_details:
+                            return {"error": error_details}
+                        else:
+                            return {
+                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                            }
+                    except json.JSONDecodeError:
+                        return {
+                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                        }
                 else:
-                    return {
-                        "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                    }
+                    return {"error": f"HTTP {e.status}: No response body"}
             else:
-                return {"error": f"HTTP {e.status}: No response body"}
+                return {"error": f"HTTP {e.status}: No response object"}
 
         except Exception as parse_error:
             print(f"Could not parse start error response: {parse_error}")
@@ -152,25 +171,34 @@ def send_text_to_avatar(session_id, text, session_token, task_type="talk"):
         print(f"HTTP Error sending text: {e}")
 
         try:
-            error_body = e.get_bytes()
-            if error_body:
-                error_response = json.loads(error_body)
-                error_details = ""
-                if "code" in error_response:
-                    error_details += f"Code: {error_response['code']}"
-                if "message" in error_response:
-                    if error_details:
-                        error_details += ", "
-                    error_details += f"Message: {error_response['message']}"
+            error_response = e.response
+            if error_response:
+                error_body = error_response.get_bytes()
+                if error_body:
+                    try:
+                        error_json = json.loads(error_body)
+                        error_details = ""
+                        if "code" in error_json:
+                            error_details += f"Code: {error_json['code']}"
+                        if "message" in error_json:
+                            if error_details:
+                                error_details += ", "
+                            error_details += f"Message: {error_json['message']}"
 
-                if error_details:
-                    return {"error": error_details}
+                        if error_details:
+                            return {"error": error_details}
+                        else:
+                            return {
+                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                            }
+                    except json.JSONDecodeError:
+                        return {
+                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                        }
                 else:
-                    return {
-                        "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                    }
+                    return {"error": f"HTTP {e.status}: No response body"}
             else:
-                return {"error": f"HTTP {e.status}: No response body"}
+                return {"error": f"HTTP {e.status}: No response object"}
 
         except Exception as parse_error:
             print(f"Could not parse send text error response: {parse_error}")
@@ -200,25 +228,34 @@ def close_heygen_session(session_id, session_token):
         print(f"HTTP Error closing session: {e}")
 
         try:
-            error_body = e.get_bytes()
-            if error_body:
-                error_response = json.loads(error_body)
-                error_details = ""
-                if "code" in error_response:
-                    error_details += f"Code: {error_response['code']}"
-                if "message" in error_response:
-                    if error_details:
-                        error_details += ", "
-                    error_details += f"Message: {error_response['message']}"
+            error_response = e.response
+            if error_response:
+                error_body = error_response.get_bytes()
+                if error_body:
+                    try:
+                        error_json = json.loads(error_body)
+                        error_details = ""
+                        if "code" in error_json:
+                            error_details += f"Code: {error_json['code']}"
+                        if "message" in error_response:
+                            if error_details:
+                                error_details += ", "
+                            error_details += f"Message: {error_json['message']}"
 
-                if error_details:
-                    return {"error": error_details}
+                        if error_details:
+                            return {"error": error_details}
+                        else:
+                            return {
+                                "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                            }
+                    except json.JSONDecodeError:
+                        return {
+                            "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
+                        }
                 else:
-                    return {
-                        "error": f"HTTP {e.status}: {error_body.decode('utf-8', errors='ignore')}"
-                    }
+                    return {"error": f"HTTP {e.status}: No response body"}
             else:
-                return {"error": f"HTTP {e.status}: No response body"}
+                return {"error": f"HTTP {e.status}: No response object"}
 
         except Exception as parse_error:
             print(f"Could not parse close error response: {parse_error}")
