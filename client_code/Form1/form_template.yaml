@@ -5,7 +5,7 @@ components:
     properties: {align: center, role: headline, text: Welcome!}
     type: Label
   - components:
-    - layout_properties: {grid_position: 'PVDINK,LYLZXX'}
+    - layout_properties: {grid_position: 'RZAWQU,RIEGLH'}
       name: avatar_window_1
       properties: {}
       type: form:Form1.avatar_window

@@ -11,4 +11,5 @@ class avatar_window(avatar_windowTemplate):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
 
-    # Any code you write here will run before the form opens.
+
+        # Set up event handling for the HTML component
