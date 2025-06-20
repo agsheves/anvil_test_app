@@ -1,7 +1,250 @@
 components: []
 container:
   properties:
-    html: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n    <script src=\"https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js\"></script>\n  </head>\n  <body class=\"bg-gray-100 p-5 font-sans\">\n    <div class=\"max-w-3xl mx-auto bg-white p-5 rounded-lg shadow-md\">\n      <div class=\"flex flex-wrap gap-2.5 mb-5\">\n        <input id=\"avatarID\" anvil-name=\"avatar-input\" type=\"text\" placeholder=\"Avatar ID\" value=\"Wayne_20240711\" \n          class=\"flex-1 min-w-[200px] p-2 border border-gray-300 rounded-md\" />\n        <input id=\"voiceID\" anvil-name=\"voice-input\" type=\"text\" placeholder=\"Voice ID\" value=\"1bd001e7e50f421d891986aad5158bc8\"\n          class=\"flex-1 min-w-[200px] p-2 border border-gray-300 rounded-md\" />\n        <button id=\"startBtn\" anvil-name=\"start-btn\" class=\"px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed\">\n          Start\n        </button>\n        <button id=\"closeBtn\" anvil-name=\"close-btn\" class=\"px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors\">\n          Close\n        </button>\n      </div>\n\n      <div class=\"flex flex-wrap gap-2.5 mb-5\">\n        <input id=\"taskInput\" anvil-name=\"task-input\" type=\"text\" placeholder=\"Enter text or use voice\" \n          class=\"flex-1 min-w-[200px] p-2 border border-gray-300 rounded-md\" />\n        <button id=\"voiceBtn\" anvil-name=\"voice-btn\" class=\"px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors\">\n          🎤 Voice\n        </button>\n        <button id=\"talkBtn\" anvil-name=\"send-btn\" class=\"px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors\">\n          Send\n        </button>\n      </div>\n\n      <video id=\"mediaElement\" anvil-name=\"video-element\" class=\"w-full max-h-[400px] border rounded-lg my-5\" autoplay></video>\n      <div id=\"status\" anvil-name=\"status-div\" class=\"p-2.5 bg-gray-50 border border-gray-300 rounded-md h-[100px] overflow-y-auto font-mono text-sm\"></div>\n    </div>\n\n    <script>\n      // Debug: Check what's available\n      console.log(\"anvil object:\", typeof anvil);\n      console.log(\"window.anvil:\", typeof window.anvil);\n      console.log(\"Available anvil methods:\", anvil ? Object.keys(anvil) : \"anvil not available\");\n\n      // Debug: Find the right DOM element\n      console.log(\"document.body:\", document.body);\n      console.log(\"document.body.parentElement:\", document.body.parentElement);\n      console.log(\"All elements with anvil attributes:\", document.querySelectorAll('[data-anvil-name], [anvil-component]'));\n\n      // Try to find anvil-specific elements\n      const anvilElements = document.querySelectorAll('*');\n      anvilElements.forEach((el, index) => {\n        const attrs = Array.from(el.attributes).filter(attr => \n          attr.name.includes('anvil') || attr.name.includes('data-anvil')\n                                                      );\n        if (attrs.length > 0) {\n          console.log(`Element ${index}:`, el, 'Anvil attrs:', attrs);\n        }\n      });\n\n      let sessionInfo = null;\n      let room = null;\n      let mediaStream = null;\n      let sessionToken = null;\n      let recognition = null;\n      let isListening = false;\n\n      const statusElement = document.getElementById(\"status\");\n      const mediaElement = document.getElementById(\"mediaElement\");\n      const avatarID = document.getElementById(\"avatarID\");\n      const voiceID = document.getElementById(\"voiceID\");\n      const taskInput = document.getElementById(\"taskInput\");\n\n      function updateStatus(message) {\n        const timestamp = new Date().toLocaleTimeString();\n        statusElement.innerHTML += `[${timestamp}] ${message}<br>`;\n        statusElement.scrollTop = statusElement.scrollHeight;\n      }\n\n      // Speech recognition setup\n      if ('webkitSpeechRecognition' in window) {\n        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();\n        recognition.continuous = false;\n        recognition.interimResults = false;\n        recognition.lang = 'en-US';\n\n        recognition.onresult = function(event) {\n          const transcript = event.results[0][0].transcript;\n          taskInput.value = transcript;\n          updateStatus(`Voice: ${transcript}`);\n          isListening = false;\n          document.getElementById(\"voiceBtn\").textContent = \"🎤 Voice\";\n        };\n\n        recognition.onend = function() {\n          isListening = false;\n          document.getElementById(\"voiceBtn\").textContent = \"🎤 Voice\";\n        };\n      }\n\n      async function createNewSession() {\n        updateStatus(\"Requesting session creation...\");\n\n        try {\n          console.log(\"Calling create_heygen_session with:\", avatarID.value, voiceID.value);\n\n          // Try using document.body as the DOM element\n          const sessionData = await anvil.call(document.body, 'create_heygen_session', avatarID.value, voiceID.value);\n\n          console.log(\"Received sessionData:\", sessionData);\n\n          if (sessionData && sessionData.sessionInfo) {\n            sessionInfo = sessionData.sessionInfo;\n            sessionToken = sessionData.sessionToken;\n            setupLiveKitRoom();\n          } else {\n            updateStatus(\"Invalid session data received\");\n          }\n        } catch (error) {\n          console.error(\"Full error object:\", error);\n          updateStatus(`Error creating session: ${error}`);\n        }\n      }\n\n      async function startStreamingSession() {\n        if (!sessionInfo) {\n          updateStatus(\"No session info available\");\n          return;\n        }\n\n        try {\n          await anvil.call(document.body, 'start_heygen_session', sessionInfo.session_id);\n          await connectToRoom();\n        } catch (error) {\n          updateStatus(`Error starting session: ${error}`);\n        }\n      }\n\n      async function processAndSendText(text) {\n        if (!text.trim()) return;\n        updateStatus(`Processing: \"${text}\"`);\n\n        try {\n          const response = await anvil.call(document.body, 'process_user_input', text);\n          if (response && sessionInfo) {\n            await anvil.call(document.body, 'send_text_to_avatar', sessionInfo.session_id, response);\n            updateStatus(`AI: ${response}`);\n          }\n        } catch (error) {\n          updateStatus(`Error processing text: ${error}`);\n        }\n      }\n\n      async function closeSession() {\n        try {\n          if (sessionInfo) {\n            await anvil.call(document.body, 'close_heygen_session', sessionInfo.session_id);\n          }\n          if (room) room.disconnect();\n          mediaElement.srcObject = null;\n          sessionInfo = null;\n          document.querySelector(\"#startBtn\").disabled = false;\n          updateStatus(\"Session closed\");\n        } catch (error) {\n          updateStatus(`Error closing session: ${error}`);\n        }\n      }\n\n      // Listen for responses from parent\n      window.addEventListener('message', function(event) {\n        if (event.data.type === 'session_created') {\n          sessionInfo = event.data.sessionInfo;\n          sessionToken = event.data.sessionToken;\n          setupLiveKitRoom();\n        } else if (event.data.type === 'session_started') {\n          connectToRoom();\n        } else if (event.data.type === 'ai_response') {\n          sendTextToAvatar(event.data.response);\n        } else if (event.data.type === 'error') {\n          updateStatus(`Error: ${event.data.message}`);\n        }\n      });\n\n      function setupLiveKitRoom() {\n        room = new LivekitClient.Room({\n          adaptiveStream: true,\n          dynacast: true,\n          videoCaptureDefaults: { resolution: LivekitClient.VideoPresets.h720.resolution },\n        });\n\n        mediaStream = new MediaStream();\n        room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {\n          if (track.kind === \"video\" || track.kind === \"audio\") {\n            mediaStream.addTrack(track.mediaStreamTrack);\n            if (mediaStream.getVideoTracks().length > 0 && mediaStream.getAudioTracks().length > 0) {\n              mediaElement.srcObject = mediaStream;\n              updateStatus(\"Media stream ready\");\n            }\n          }\n        });\n\n        room.prepareConnection(sessionInfo.url, sessionInfo.access_token);\n        updateStatus(\"Session created successfully\");\n      }\n\n      async function connectToRoom() {\n        await room.connect(sessionInfo.url, sessionInfo.access_token);\n        document.querySelector(\"#startBtn\").disabled = true;\n        updateStatus(\"Streaming started\");\n      }\n\n      function sendTextToAvatar(text) {\n        window.parent.postMessage({\n          type: 'send_to_avatar',\n          text: text,\n          sessionId: sessionInfo.session_id\n        }, '*');\n        updateStatus(`Sent to avatar: \"${text}\"`);\n      }\n\n      // Event listeners\n      document.querySelector(\"#startBtn\").addEventListener(\"click\", async () => {\n        await createNewSession();\n        await startStreamingSession();\n      });\n\n      document.querySelector(\"#closeBtn\").addEventListener(\"click\", closeSession);\n\n      document.querySelector(\"#voiceBtn\").addEventListener(\"click\", () => {\n        if (!recognition) return;\n        if (isListening) {\n          recognition.stop();\n        } else {\n          recognition.start();\n          isListening = true;\n          document.getElementById(\"voiceBtn\").textContent = \"🔴 Stop\";\n        }\n      });\n\n      document.querySelector(\"#talkBtn\").addEventListener(\"click\", () => {\n        const text = taskInput.value.trim();\n        if (text) {\n          processAndSendText(text);\n          taskInput.value = \"\";\n        }\n      });\n    </script>\n  </body>\n</html>"
+    html: |-
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>Basic HeyGen Avatar</title>
+          <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .controls { margin-bottom: 20px; }
+            input, button { padding: 10px; margin: 5px; }
+            #avatarVideo { width: 100%; max-width: 600px; border: 1px solid #ccc; }
+            #status { background: #f5f5f5; padding: 10px; margin: 10px 0; height: 100px; overflow-y: auto; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Decis CoPilot</h1>
+
+            <div class="controls">
+              <input id="avatarId" type="text" placeholder="Avatar ID" value="Wayne_20240711">
+              <button id="startBtn">Start Avatar</button>
+              <button id="stopBtn">Stop Avatar</button>
+            </div>
+
+            <div class="controls">
+              <input id="textInput" type="text" placeholder="Text for avatar to speak">
+              <button id="sendTextBtn">Send Text</button>
+            </div>
+
+            <video id="avatarVideo" autoplay muted></video>
+
+            <div id="status">Ready...</div>
+          </div>
+
+          <script>
+            // Configuration - replace with your API key
+            const API_KEY = "YOUR_API_KEY_HERE";
+            const SERVER_URL = "https://api.heygen.com";
+
+            // Global state
+            let sessionInfo = null;
+            let sessionToken = null;
+            let room = null;
+            let mediaStream = null;
+
+            // DOM elements
+            const avatarVideo = document.getElementById('avatarVideo');
+            const statusDiv = document.getElementById('status');
+            const avatarIdInput = document.getElementById('avatarId');
+            const textInput = document.getElementById('textInput');
+
+            // Utility function to log status
+            function logStatus(message) {
+              console.log(message);
+              statusDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${message}<br>`;
+              statusDiv.scrollTop = statusDiv.scrollHeight;
+            }
+
+            // Step 1: Get session token
+            async function getSessionToken() {
+              logStatus("Getting session token...");
+
+              const response = await fetch(`${SERVER_URL}/v1/streaming.create_token`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Api-Key": API_KEY,
+                },
+              });
+
+              const data = await response.json();
+              sessionToken = data.data.token;
+              logStatus("Session token obtained");
+            }
+
+            // Step 2: Create avatar session
+            async function createSession() {
+              if (!sessionToken) {
+                await getSessionToken();
+              }
+
+              logStatus("Creating avatar session...");
+
+              const response = await fetch(`${SERVER_URL}/v1/streaming.new`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${sessionToken}`,
+                },
+                body: JSON.stringify({
+                  version: "v2",
+                  avatar_id: avatarIdInput.value
+                })
+              });
+
+              const data = await response.json();
+              sessionInfo = data.data;
+              logStatus("Avatar session created");
+
+              // Set up LiveKit room
+              await setupLiveKitRoom();
+
+              // Start the session
+              await startSession();
+            }
+
+            // Step 3: Setup LiveKit room for video
+            async function setupLiveKitRoom() {
+              logStatus("Setting up video connection...");
+
+              room = new LivekitClient.Room();
+
+              // Handle video/audio tracks
+              room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+                if (track.kind === "video") {
+                  if (!mediaStream) {
+                    mediaStream = new MediaStream();
+                  }
+                  mediaStream.addTrack(track.mediaStreamTrack);
+                  avatarVideo.srcObject = mediaStream;
+                  logStatus("Avatar video connected");
+                }
+              });
+
+              // Connect to LiveKit room
+              await room.connect(sessionInfo.url, sessionInfo.access_token);
+              logStatus("Connected to avatar");
+            }
+
+            // Step 4: Start the streaming session
+            async function startSession() {
+              logStatus("Starting avatar...");
+
+              await fetch(`${SERVER_URL}/v1/streaming.start`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${sessionToken}`,
+                },
+                body: JSON.stringify({
+                  session_id: sessionInfo.session_id,
+                })
+              });
+
+              logStatus("Avatar started and ready!");
+            }
+
+            // Step 5: Send text to avatar
+            async function sendTextToAvatar(text) {
+              if (!sessionInfo) {
+                logStatus("No active session - start avatar first");
+                return;
+              }
+
+              logStatus(`Sending text: "${text}"`);
+
+              await fetch(`${SERVER_URL}/v1/streaming.task`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${sessionToken}`,
+                },
+                body: JSON.stringify({
+                  session_id: sessionInfo.session_id,
+                  text: text,
+                  task_type: "talk"
+                })
+              });
+
+              logStatus("Text sent to avatar");
+            }
+
+            // Step 6: Stop session
+            async function stopSession() {
+              if (!sessionInfo) {
+                logStatus("No active session");
+                return;
+              }
+
+              logStatus("Stopping avatar...");
+
+              await fetch(`${SERVER_URL}/v1/streaming.stop`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${sessionToken}`,
+                },
+                body: JSON.stringify({
+                  session_id: sessionInfo.session_id,
+                })
+              });
+
+              // Cleanup
+              if (room) {
+                room.disconnect();
+              }
+              avatarVideo.srcObject = null;
+              sessionInfo = null;
+              sessionToken = null;
+              room = null;
+              mediaStream = null;
+
+              logStatus("Avatar stopped");
+            }
+
+            // Event listeners
+            document.getElementById('startBtn').addEventListener('click', async () => {
+              try {
+                await createSession();
+              } catch (error) {
+                logStatus(`Error: ${error.message}`);
+              }
+            });
+
+            document.getElementById('stopBtn').addEventListener('click', async () => {
+              try {
+                await stopSession();
+              } catch (error) {
+                logStatus(`Error: ${error.message}`);
+              }
+            });
+
+            document.getElementById('sendTextBtn').addEventListener('click', async () => {
+              const text = textInput.value.trim();
+              if (text) {
+                try {
+                  await sendTextToAvatar(text);
+                  textInput.value = '';
+                } catch (error) {
+                  logStatus(`Error: ${error.message}`);
+                }
+              }
+            });
+
+            // Allow Enter key to send text
+            textInput.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') {
+                document.getElementById('sendTextBtn').click();
+              }
+            });
+          </script>
+        </body>
+      </html>
   type: HtmlTemplate
 custom_component: true
 is_package: true
