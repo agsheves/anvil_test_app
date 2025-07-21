@@ -1,5 +1,19 @@
 allow_embedding: false
 db_schema:
+  course_info:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: name
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: image
+      type: media
+    - admin_ui: {order: 2, width: 200}
+      name: booking_time_days
+      type: string
+    server: full
+    title: course_info
   users:
     client: none
     columns:
@@ -33,13 +47,14 @@ runtime_options:
   server_spec: {base: python310-minimal}
   server_version: python3-sandbox
   version: 2
+scheduled_tasks: []
 secrets:
   HEYGEN_API_KEY:
     type: secret
     value: {IWD6RP5QFCPRKWFU: VTAz2FAB3n/DNyNBNcAWYzFJXYJOp198Mjng2aTClFfQxQhB2DpePB3Su5/1E48Yt0sLFeSPt3AdBFj4EsvWXO+n0PE28J+RYanR2gnLIii6wAr1lCVHxxLjwBZXIfWDuTi6+bPsKMaX15+3WYjcrMUwcNtGDTA7gj4lIodBV6DWVx/ZJEgyjFyBZCmBT8W5G+GDAVeNi7+scJA=}
 services:
 - client_config: {}
-  server_config: {}
+  server_config: {auto_create_missing_columns: true}
   source: /runtime/services/tables.yml
 - client_config: {allow_signup: false, confirm_email: true, enable_automatically: true, use_email: true}
   server_config: {user_table: users}
@@ -47,5 +62,58 @@ services:
 - client_config: {}
   server_config: {}
   source: /runtime/services/anvil/secrets.yml
+- client_config:
+    app_files:
+    - alternateLink: https://docs.google.com/spreadsheets/d/1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0/edit?usp=drivesdk
+      appDataContents: false
+      capabilities: {canCopy: true, canEdit: true}
+      copyRequiresWriterPermission: false
+      copyable: true
+      createdDate: '2025-07-21T20:23:56.023Z'
+      editable: true
+      embedLink: https://docs.google.com/spreadsheets/d/1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0/htmlembed?ouid=105749649116749768227
+      etag: '"MTc1MzEyOTYyOTg2OA"'
+      explicitlyTrashed: false
+      exportLinks: {application/pdf: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=pdf', application/vnd.oasis.opendocument.spreadsheet: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=ods', application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=xlsx', application/x-vnd.oasis.opendocument.spreadsheet: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=ods', application/zip: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=zip', text/csv: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=csv', text/tab-separated-values: 'https://docs.google.com/spreadsheets/export?id=1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0&exportFormat=tsv'}
+      fileSize: '93163'
+      iconLink: https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.spreadsheet
+      id: 1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0
+      kind: drive#file
+      labels: {hidden: false, restricted: false, starred: false, trashed: false, viewed: true}
+      lastModifyingUser:
+        displayName: Andrew Sheves
+        emailAddress: andrew@decis.ai
+        isAuthenticatedUser: true
+        kind: drive#user
+        permissionId: '13960866872567285789'
+        picture: {url: 'https://lh3.googleusercontent.com/a/ACg8ocKOUVU5Gi6JlbuT0CcnaYs6E1WSfxH2-elyPxCtN_H0q8jVCm0=s64'}
+      lastModifyingUserName: Andrew Sheves
+      lastViewedByMeDate: '2025-07-21T20:27:09.868Z'
+      markedViewedByMeDate: '1970-01-01T00:00:00.000Z'
+      mimeType: application/vnd.google-apps.spreadsheet
+      modifiedByMeDate: '2025-07-21T20:27:09.868Z'
+      modifiedDate: '2025-07-21T20:27:09.868Z'
+      ownerNames: [Andrew Sheves]
+      owners:
+      - displayName: Andrew Sheves
+        emailAddress: andrew@decis.ai
+        isAuthenticatedUser: true
+        kind: drive#user
+        permissionId: '13960866872567285789'
+        picture: {url: 'https://lh3.googleusercontent.com/a/ACg8ocKOUVU5Gi6JlbuT0CcnaYs6E1WSfxH2-elyPxCtN_H0q8jVCm0=s64'}
+      parents:
+      - {id: 0AIUmtNNip2ElUk9PVA, isRoot: true, kind: drive#parentReference, parentLink: 'https://www.googleapis.com/drive/v2/files/0AIUmtNNip2ElUk9PVA', selfLink: 'https://www.googleapis.com/drive/v2/files/1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0/parents/0AIUmtNNip2ElUk9PVA'}
+      python_name: golf_test
+      quotaBytesUsed: '93163'
+      selfLink: https://www.googleapis.com/drive/v2/files/1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0
+      shared: false
+      spaces: [drive]
+      thumbnailLink: https://lh3.googleusercontent.com/drive-storage/AJQWtBMthc7EFV5ah9vA0cHU9_ylXdjQkU0ByhYrC5FNgkTzqfyoovIrCHvTvf_oLwsmmtqkH4FUyLJt3plUN2QpFgWl2OUi0fsyz2-jKQhVH0FiOIbkBDzaCk1mgBoQ-g=s220
+      title: golf_test
+      userPermission: {etag: '"Wl-LcTHdtBBj-beq32HRMEL0Dyw"', id: me, kind: drive#permission, pendingOwner: false, role: owner, selfLink: 'https://www.googleapis.com/drive/v2/files/1Onu4AEs98uBMATdhKwzYiCwMMjelS5c_s5Rv4f1oom0/permissions/me', type: user}
+      version: '8'
+      writersCanShare: true
+  server_config: {enc_delegation_refresh_token: 4/VHKuS1/iL1CJtKXTNX1UxkWhIIVWO8Dvb0mZC406Dv6org/3R+ZW/5ZwinZPwwp+N59S8WPB6gIIYZ78XWhsLLgop5tyc6alFnUVl1nVKLNiKcsgCVmf4vtZA6hiyI6tVbgzg0aQnO4lWvL2sMzunY+QS/NOe56SI3dZ4doifXX5MZG89Fum5Qnhn5PWj4F6HHvAtG6Vu1EY4b3QYJhNyrLBRDarku/LzHyH0HqYNu/cJZ6NmAIrSTe9aExpO8o0PZH9rJlX+QE4i+GoJsAu5idry+S75wZIs5D61HCXSW+AueMBGFoPzNCGtXTw==}
+  source: /runtime/services/google.yml
 startup: {module: Form1, type: form}
 startup_form: null
