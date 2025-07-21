@@ -4,8 +4,6 @@ unique_ids:
     theme.css: TGFO4TQJSCNQT4SLJOHVCAUWH4W53DJS
   forms:
     Form1: V73OTN34Y5GHVAWNAY45V77MDUAV5QXN
-    Form1.avatar_window: '1750363666482953086444138.5525'
   modules: {}
   scripts: {}
-  server_modules:
-    ServerModule1: '1750364218268454926926646.3153'
+  server_modules: {}
