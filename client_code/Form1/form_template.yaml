@@ -4,6 +4,10 @@ components:
     name: label_1
     properties: {align: center, role: headline, text: Welcome!}
     type: Label
+  - layout_properties: {grid_position: 'VLNDYN,EYTJDI'}
+    name: form2_1
+    properties: {}
+    type: form:Form1.Form2
   layout_properties: {slot: default}
   name: content_panel
   properties: {col_widths: '{}'}
